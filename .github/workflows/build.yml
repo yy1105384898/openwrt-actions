@@ -69,9 +69,9 @@ jobs:
       run: cd fanchmwrt && ./scripts/feeds install -a
 
     - name: Replace golang package
+      working-directory: /workdir/fanchmwrt
       run: |
         echo "正在替换golang包..."
-        cd fanchmwrt
         rm -rf feeds/packages/lang/golang
         git clone https://github.com/sbwml/packages_lang_golang -b 26.x feeds/packages/lang/golang
         #git clone https://ghproxy.com/https://github.com/sbwml/packages_lang_golang -b 26.x feeds/packages/lang/golang
