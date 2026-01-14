@@ -1,4 +1,4 @@
-name: OpenWrt Build
+name: FanchmWrt Build
 
 on:
   repository_dispatch:
@@ -52,41 +52,41 @@ jobs:
       working-directory: /workdir
       run: |
         df -hT $PWD
-        git clone $REPO_URL -b $REPO_BRANCH openwrt
-        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+        git clone $REPO_URL -b $REPO_BRANCH fanchmwrt
+        ln -sf /workdir/fanchmwrt $GITHUB_WORKSPACE/fanchmwrt
 
     - name: Load custom feeds
       run: |
-        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
+        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF fanchmwrt/feeds.conf.default
         chmod +x $DIY_P1_SH
-        cd openwrt
+        cd fanchmwrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
 
     - name: Update feeds
-      run: cd openwrt && ./scripts/feeds update -a
+      run: cd fanchmwrt && ./scripts/feeds update -a
 
     - name: Install feeds
-      run: cd openwrt && ./scripts/feeds install -a
+      run: cd fanchmwrt && ./scripts/feeds install -a
 
     - name: Load custom configuration
       run: |
-        [ -e files ] && mv files openwrt/files
-        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+        [ -e files ] && mv files fanchmwrt/files
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE fanchmwrt/.config
         chmod +x $DIY_P2_SH
-        cd openwrt
+        cd fanchmwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
     - name: Download package
       id: package
       run: |
-        cd openwrt
+        cd fanchmwrt
         make download -j8
 
 
     - name: Compile the firmware
       id: compile
       run: |
-        cd openwrt
+        cd fanchmwrt
         echo -e "$(nproc) thread compile"
         make -j$(nproc) || make -j1 || make -j1 V=s
         echo "status=success" >> $GITHUB_OUTPUT
@@ -102,14 +102,14 @@ jobs:
       uses: actions/upload-artifact@main
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
       with:
-        name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
-        path: openwrt/bin
+        name: FanchmWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
+        path: fanchmwrt/bin
 
     - name: Organize files
       id: organize
       if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
-        cd openwrt/bin/targets/*/*
+        cd fanchmwrt/bin/targets/*/*
         rm -rf packages
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
@@ -118,7 +118,7 @@ jobs:
       uses: actions/upload-artifact@main
       if: steps.organize.outputs.status == 'success' && !cancelled()
       with:
-        name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
+        name: FanchmWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
         path: ${{ env.FIRMWARE }}
 
     - name: Generate release tag
